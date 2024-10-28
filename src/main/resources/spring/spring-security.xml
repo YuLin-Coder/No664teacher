@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+			 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			 xmlns="http://www.springframework.org/schema/security" xmlns:sec="http://www.springframework.org/schema/c"
+			 xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/security
+            http://www.springframework.org/schema/security/spring-security.xsd">
+	<!-- 不需要权限访问 -->
+	<http pattern="/loginPage" security="none"></http>
+	<http pattern="/selectlogin" security="none"></http>
+	<http pattern="/404" security="none"></http>
+	<http pattern="/500" security="none"></http>
+
+
+	<http auto-config='true'>
+		<csrf disabled="true" />
+		<headers>
+            <!-- Iframe页面允许被其它页面嵌入 -->
+            <frame-options disabled="true" />
+        </headers>
+		<!-- 没有权限跳转页面 -->
+		<access-denied-handler error-page="/loginPage" />
+		<!-- 校验登陆可访问 -->
+		<intercept-url pattern="/admin/**"  access="hasRole('ROLE_ADMIN')" />
+		<intercept-url pattern="/teacher/**"  access="hasRole('ROLE_TEACHER')" />
+		<intercept-url pattern="/college/**"  access="hasRole('ROLE_COLLEGE')" />
+		<intercept-url pattern="/audit/**"  access="hasRole('ROLE_AUDIT')" />
+        <!--<intercept-url pattern="/userInfo/**" access="authentication"/>-->
+		<form-login login-page="/loginPage" login-processing-url="/login" />
+		<logout logout-url="/logout" logout-success-url="/selectLogin" />
+		<remember-me />
+
+
+	</http>
+
+	<!-- 验证配置，实现用户认证的入口，主要实现UserDetailsService接口即可 -->
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider ref="daoAuthenticationProvider">
+		</authentication-provider>
+	</authentication-manager>
+	 <authentication-manager alias="authManager" erase-credentials="false" >
+      <authentication-provider user-service-ref="myUserDetailService">
+         <password-encoder ref="passwordEncoder">
+           </password-encoder>
+      </authentication-provider>
+   </authentication-manager>
+
+	
+	<beans:bean id="daoAuthenticationProvider" class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
+        <beans:property name="userDetailsService" ref="myUserDetailService" />
+    </beans:bean>    
+    <!-- spring推荐的单向加密算法 -->
+    <beans:bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+    
+    <!-- 在这个类中，读入用户的密码，角色信息，是否锁定，账号是否过期等属性信息  -->
+    <beans:bean id="myUserDetailService" class="com.hdc.security.MyUserDetailService" />
+
+</beans:beans>
